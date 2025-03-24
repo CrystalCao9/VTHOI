@@ -45,7 +45,8 @@ class ALFM(nn.Module):
                          self._compute_channel_attn(input_feat2, self.channel_max_compress, self.channel_max_expand))
 
         # Cross-attention mechanism
-        cross_attn_matrix = torch.matmul(channel_attn1, channel_attn2.transpose(1, 2))
+        scale = channel_attn1.size(1) ** 0.5
+        cross_attn_matrix = torch.matmul(channel_attn1, channel_attn2.transpose(1, 2)) / scale
         attended_feat1 = torch.matmul(F.softmax(cross_attn_matrix, dim=-1), input_feat1)
         attended_feat2 = torch.matmul(F.softmax(cross_attn_matrix.transpose(1, 2), dim=-1), input_feat2)
 
@@ -64,4 +65,4 @@ class ALFM(nn.Module):
         enhanced_feat1 = input_feat1 * spatial_mask1 + input_feat1
         enhanced_feat2 = input_feat2 * spatial_mask2 + input_feat2
 
-        return torch.cat([enhanced_feat1.transpose(1, 2), enhanced_feat2.transpose(1, 2)], dim=0)
+        return torch.cat([enhanced_feat1, enhanced_feat2], dim=0)
